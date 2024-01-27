@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsup src/main.ts",
     "build:watch": "tsup src/main.ts --watch",
-    "start": "node dist/main.js"
+    "generate": "node dist/main.js"
   },
   "author": "",
   "license": "ISC",

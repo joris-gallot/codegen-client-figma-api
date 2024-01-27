@@ -8,16 +8,44 @@ const FIGMA_DOC_API_URL = "https://www.figma.com/developers/api";
 const DEBUG = false;
 
 const endpointsMap = new Map<string, FigmaEndpoint[]>();
+const interfaces = new Map<string, string>();
 
-async function parseEndpointDoc(
+function urlToInterfaceName({
+  url,
+  method,
+}: Pick<FigmaEndpoint, "url" | "method">) {
+  const methodName =
+    method.charAt(0).toUpperCase() + method.slice(1).toLowerCase();
+
+  const formattedUrl = url
+    .split("/")
+    .map((segment) => {
+      if (segment.startsWith(":")) {
+        return "Param";
+      } else {
+        return segment
+          .split("_")
+          .map(
+            (subSegment) =>
+              subSegment.charAt(0).toUpperCase() +
+              subSegment.slice(1).toLowerCase()
+          )
+          .join("");
+      }
+    })
+    .join("");
+
+  return methodName + formattedUrl;
+}
+
+async function parseEndpointUrl(
   endpoint: ElementHandle<HTMLDivElement>
-): Promise<FigmaEndpoint> {
+): Promise<Pick<FigmaEndpoint, "method" | "url">> {
   const spans = await endpoint.$$("p > span");
 
-  const getElTextContent = (el: ElementHandle) =>
-    el.evaluate((el) => el.textContent || "");
-
-  const spanContents = await Promise.all(spans.map(getElTextContent));
+  const spanContents = await Promise.all(
+    spans.map((el: ElementHandle) => el.evaluate((el) => el.textContent || ""))
+  );
 
   const method = spanContents.find((text) =>
     ENDPOINTS_METHODS.includes(text)
@@ -28,6 +56,32 @@ async function parseEndpointDoc(
   return {
     method,
     url,
+  };
+}
+
+async function parseEndpointResponse(endpoint: ElementHandle<HTMLDivElement>) {
+  const responseEl = await endpoint.$('div[class*="developer_docs--returns"]');
+  const responseContent = await responseEl?.evaluate((el) => el.textContent);
+
+  return responseContent || undefined;
+}
+
+async function parseEndpointDoc(
+  endpoint: ElementHandle<HTMLDivElement>
+): Promise<FigmaEndpoint> {
+  const endpointUrlAndMethod = await parseEndpointUrl(endpoint);
+  const responseContent = await parseEndpointResponse(endpoint);
+
+  const responseInterfaceName = urlToInterfaceName(endpointUrlAndMethod);
+
+  // TODO: if referencing an existing interface: generate all existing interface before
+  if (responseContent && responseContent.startsWith("{")) {
+    interfaces.set(responseInterfaceName, responseContent);
+  }
+
+  return {
+    ...endpointUrlAndMethod,
+    response: responseContent ? responseInterfaceName : undefined,
   };
 }
 
