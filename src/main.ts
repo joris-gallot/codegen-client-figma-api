@@ -74,14 +74,16 @@ async function parseEndpointDoc(
 
   const responseInterfaceName = urlToInterfaceName(endpointUrlAndMethod);
 
+  const hasResponse = responseContent && responseContent.startsWith("{");
+
   // TODO: if referencing an existing interface: generate all existing interface before
-  if (responseContent && responseContent.startsWith("{")) {
+  if (hasResponse) {
     interfaces.set(responseInterfaceName, responseContent);
   }
 
   return {
     ...endpointUrlAndMethod,
-    response: responseContent ? responseInterfaceName : undefined,
+    response: hasResponse ? responseInterfaceName : undefined,
   };
 }
 
