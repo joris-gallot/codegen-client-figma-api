@@ -1,0 +1,23 @@
+{
+  "name": "codegen-figma-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/main.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/main.ts",
+    "build:watch": "tsup src/main.ts --watch",
+    "start": "node dist/main.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@total-typescript/ts-reset": "^0.5.1",
+    "tsup": "^8.0.1"
+  },
+  "dependencies": {
+    "puppeteer": "^21.9.0"
+  }
+}
